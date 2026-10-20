@@ -1,0 +1,54 @@
+# vLLM OpenAI-compatible server + Open WebUI on one DGX Spark.
+# vllm service: the NGC container and serve command from the NVIDIA playbook "vllm"
+#   (https://build.nvidia.com/spark/vllm). Default model openai/gpt-oss-20b is the playbook's example.
+# open-webui service: OPENAI_API_BASE_URL wiring as in the NVIDIA "trt-llm" playbook.
+# The compose form is untested. Images checked for linux/arm64 on 2026-10-20:
+#   nvcr.io/nvidia/vllm:26.05.post1-py3, ghcr.io/open-webui/open-webui:main
+services:
+  vllm:
+    image: nvcr.io/nvidia/vllm:${VLLM_TAG:-26.05.post1-py3}
+    command: >
+      vllm serve ${MODEL:-openai/gpt-oss-20b}
+      --host 0.0.0.0
+      --port 8000
+      --gpu-memory-utilization ${GPU_MEMORY_UTILIZATION:-0.8}
+    environment:
+      HF_TOKEN: ${HF_TOKEN:-}
+    volumes:
+      - ${HF_CACHE:-~/.cache/huggingface}:/root/.cache/huggingface
+    ports:
+      - "8000:8000"
+    ipc: host
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      # First start downloads weights and compiles kernels; a cold start of several minutes is normal.
+      start_period: 20m
+    restart: unless-stopped
+
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:main
+    depends_on:
+      vllm:
+        condition: service_healthy
+    environment:
+      OPENAI_API_BASE_URL: http://vllm:8000/v1
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-none}
+      ENABLE_OLLAMA_API: "false"
+    ports:
+      - "8080:8080"
+    volumes:
+      - open-webui:/app/backend/data
+    restart: unless-stopped
+
+volumes:
+  open-webui:

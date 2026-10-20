@@ -1,0 +1,102 @@
+name: Benchmark result
+description: Share a measured inference result from DGX Spark / GB10 hardware
+title: "[bench] <model> on <engine> (<quant>)"
+labels: ["benchmark"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for measuring. Please paste the real command and raw output — numbers without them cannot go into benchmarks.csv.
+  - type: dropdown
+    id: hardware
+    attributes:
+      label: Hardware
+      options:
+        - DGX Spark Founders Edition 128 GB
+        - DGX Spark 64 GB (OEM)
+        - ASUS Ascent GX10
+        - Dell Pro Max with GB10
+        - Other GB10 system (say which below)
+        - 2x Spark (QSFP)
+        - 3+ Sparks
+    validations:
+      required: true
+  - type: input
+    id: system
+    attributes:
+      label: DGX OS / driver / CUDA
+      placeholder: "DGX OS 7.5.0, driver 580.159.03, CUDA 13.0.2"
+    validations:
+      required: true
+  - type: input
+    id: model
+    attributes:
+      label: Model (exact repo or tag)
+      placeholder: "openai/gpt-oss-120b  |  qwen3:30b-a3b  |  ggml-org/gpt-oss-120b-GGUF"
+    validations:
+      required: true
+  - type: input
+    id: quant
+    attributes:
+      label: Quantisation
+      placeholder: "MXFP4 / NVFP4 / Q4_K_M / FP8 / AWQ"
+    validations:
+      required: true
+  - type: input
+    id: engine
+    attributes:
+      label: Engine and version / image tag
+      placeholder: "vLLM 0.28.0 (vllm/vllm-openai:v0.28.0)  |  llama.cpp b7941  |  Ollama 0.12.6"
+    validations:
+      required: true
+  - type: input
+    id: workload
+    attributes:
+      label: Context / workload
+      placeholder: "pp2048 tg32 @ depth 0  |  ISL 1024 / OSL 128  |  prompt 400 tok, max_tokens 400"
+    validations:
+      required: true
+  - type: input
+    id: concurrency
+    attributes:
+      label: Concurrency (and per-request or aggregate?)
+      placeholder: "1  |  8, aggregate"
+    validations:
+      required: true
+  - type: textarea
+    id: results
+    attributes:
+      label: Results
+      description: decode tok/s, prefill tok/s, TTFT if available
+      placeholder: |
+        decode: 58.7 tok/s
+        prefill: 2444 tok/s
+    validations:
+      required: true
+  - type: textarea
+    id: command
+    attributes:
+      label: Exact commands (server + benchmark)
+      render: bash
+    validations:
+      required: true
+  - type: textarea
+    id: output
+    attributes:
+      label: Raw output (llama-bench table, vllm bench serve summary, harness JSON)
+      render: text
+    validations:
+      required: true
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checklist
+      options:
+        - label: Warm-up request discarded
+        - label: Log shows the intended kernel path (no emulation / fallback)
+        - label: Only one large model was resident in memory
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes
+      description: Power mode, clocks, anything unusual

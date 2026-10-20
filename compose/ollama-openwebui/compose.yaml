@@ -1,0 +1,26 @@
+# Open WebUI with Ollama bundled in one container, on one DGX Spark.
+# A compose translation of the docker run command in the NVIDIA playbook "open-webui"
+# (https://build.nvidia.com/spark/open-webui). The compose form is untested.
+# Image ghcr.io/open-webui/open-webui:ollama ships linux/arm64 (registry manifest checked 2026-10-20).
+# The tag moves; pin a release tag for reproducible setups.
+services:
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:ollama
+    container_name: open-webui
+    ports:
+      - "8080:8080"
+    volumes:
+      - open-webui:/app/backend/data
+      - open-webui-ollama:/root/.ollama
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    restart: unless-stopped
+
+volumes:
+  open-webui:
+  open-webui-ollama:
