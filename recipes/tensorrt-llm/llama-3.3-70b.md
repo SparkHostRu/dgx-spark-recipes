@@ -4,9 +4,9 @@
 |---|---|
 | Models | Target: `nvidia/Llama-3.3-70B-Instruct-FP4` (Hugging Face redirects it to [`nvidia/Llama-3.3-70B-Instruct-NVFP4`](https://huggingface.co/nvidia/Llama-3.3-70B-Instruct-NVFP4)). Draft: `nvidia/Llama-3.1-8B-Instruct-FP4` (redirects to `-NVFP4`) |
 | Image | `nvcr.io/nvidia/tensorrt-llm/release:1.3.0rc12` (arm64 manifest present, checked 2026-10-20) |
-| Memory | NVIDIA states one Spark is enough for Llama-3.3-70B with draft-target ([playbook `speculative-decoding`](https://build.nvidia.com/spark/speculative-decoding)) |
+| Memory | NVIDIA states one Spark is enough for Llama-3.3-70B with draft-target ([playbook `speculative-decoding`](https://github.com/NVIDIA/dgx-spark-playbooks/blob/main/nvidia/speculative-decoding/README.md)) |
 | Expected speed | **No published tok/s for this recipe on Spark found.** For reference, dense 70B without speculation: Ollama ~5 tok/s ([ollama/llama-3.3-70b.md](../ollama/llama-3.3-70b.md)) |
-| Recipe source | NVIDIA playbook [`speculative-decoding`](https://build.nvidia.com/spark/speculative-decoding), Option 2 "Draft Target", Last Updated 04/20/2026 |
+| Recipe source | NVIDIA playbook [`speculative-decoding`](https://github.com/NVIDIA/dgx-spark-playbooks/blob/main/nvidia/speculative-decoding/README.md), Option 2 "Draft Target", Last Updated 04/20/2026 |
 | Status | **official** |
 
 ## Run

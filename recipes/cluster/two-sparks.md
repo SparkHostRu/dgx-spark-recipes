@@ -11,7 +11,7 @@ Two Sparks connect directly with one QSFP cable through the ConnectX-7 NICs (up 
 
 ## 1. Network: official
 
-Source: playbook [`connect-two-sparks`](https://build.nvidia.com/spark/connect-two-sparks), Last Updated 08/12/2026. Status: **official**.
+Source: playbook [`connect-two-sparks`](https://build.nvidia.com/spark/connect-two-sparks) ([GitHub](https://github.com/NVIDIA/dgx-spark-playbooks/blob/main/nvidia/connect-two-sparks/README.md)), Last Updated 7/21/2026. Status: **official**, except the `curl` line that downloads `discover-sparks`: the playbook only links the script, so that line is *modified from* the playbook (we added the download, using the script's path in the repo).
 
 ```bash
 ibdev2netdev     # shows which interfaces are Up
@@ -35,19 +35,18 @@ sudo netplan apply
 # Node 2: the same file with .11 instead of .10
 
 # Passwordless SSH between the nodes (NVIDIA script)
-curl -fsSL -o discover-sparks https://raw.githubusercontent.com/NVIDIA/dgx-spark-playbooks/refs/heads/main/nvidia/playbook-connect-two-sparks/assets/discover-sparks
+curl -fsSL -o discover-sparks https://raw.githubusercontent.com/NVIDIA/dgx-spark-playbooks/refs/heads/main/nvidia/connect-two-sparks/assets/discover-sparks
 chmod +x discover-sparks
 bash ./discover-sparks
 ```
 
 - Both nodes need the same username.
-- If `~/.ssh` does not exist yet: `mkdir -p ~/.ssh && chmod 700 ~/.ssh`.
 - Each physical QSFP port appears as **two** logical interfaces (`enp1s0f1np1` and `enP2p1s0f1np1`).
 - One cable gives full bandwidth. With two cables, all four interfaces need IP addresses (playbook).
 
 ## 2. NCCL check: official
 
-Source: playbook [`nccl`](https://build.nvidia.com/spark/nccl), Last Updated 10/14/2026. Status: **official**.
+Source: [`nvidia/playbook-nccl/README.md`](https://github.com/NVIDIA/dgx-spark-playbooks/blob/main/nvidia/playbook-nccl/README.md) in the NVIDIA playbooks repo, Last Updated 10/14/2026. The published page [build.nvidia.com/spark/nccl](https://build.nvidia.com/spark/nccl) still shows an older revision (12/15/2025, NCCL `v2.30.7-1`, assets under `nvidia/nccl/`). Status: **official**.
 
 ```bash
 curl -fsSL "https://raw.githubusercontent.com/NVIDIA/dgx-spark-playbooks/refs/heads/main/nvidia/playbook-nccl/assets/setup.sh" -o setup.sh
@@ -60,7 +59,7 @@ To build NCCL by hand for sm_121: `make -j src.build NVCC_GENCODE="-gencode=arch
 
 ## 3a. vLLM, Ray + NGC: official
 
-Source: playbook [`vllm`](https://build.nvidia.com/spark/vllm), "Run on two Sparks" tab, Last Updated 06/12/2026. Status: **official**.
+Source: legacy NVIDIA playbook [`nvidia/vllm/README.md`](https://github.com/NVIDIA/dgx-spark-playbooks/blob/main/nvidia/vllm/README.md), "Run on two Sparks", Last Updated 06/12/2026. The current page [build.nvidia.com/spark/vllm](https://build.nvidia.com/spark/vllm) was reorganised on 09/14/2026 around NVIDIA Sync and points to [recipes.vllm.ai](https://recipes.vllm.ai/browse?panel=open&hw=dgx_spark_gb10) and spark-vllm-docker (section 3b); these Ray/NGC commands are now only in the GitHub README. Status: **official**.
 
 ```bash
 # Both nodes. The playbook pins run_cluster.sh to a known-good commit
@@ -86,7 +85,10 @@ bash run_cluster.sh $VLLM_IMAGE $VLLM_HOST_IP --head ~/.cache/huggingface \
   -e MASTER_ADDR=$VLLM_HOST_IP
 
 # Node 2 (worker)
-export HEAD_NODE_IP=<NODE_1_IP_ADDRESS>
+export MN_IF_NAME=enp1s0f1np1
+export VLLM_HOST_IP=$(ip -4 addr show $MN_IF_NAME | grep -oP '(?<=inet\s)\d+(\.\d+){3}')
+export HEAD_NODE_IP=<NODE_1_IP_ADDRESS>     # Node 1's QSFP-side IP (echo $VLLM_HOST_IP on Node 1)
+export VLLM_IMAGE=nvcr.io/nvidia/vllm:26.05-py3
 bash run_cluster.sh $VLLM_IMAGE $HEAD_NODE_IP --worker ~/.cache/huggingface \
   -e VLLM_HOST_IP=$VLLM_HOST_IP \
   -e UCX_NET_DEVICES=$MN_IF_NAME \
@@ -97,9 +99,17 @@ bash run_cluster.sh $VLLM_IMAGE $HEAD_NODE_IP --worker ~/.cache/huggingface \
   -e RAY_memory_monitor_refresh_ms=0 \
   -e MASTER_ADDR=$HEAD_NODE_IP
 
-# Head node: check the cluster and serve
+# Head node: check the cluster
 export VLLM_CONTAINER=$(docker ps --format '{{.Names}}' | grep -E '^node-[0-9]+$')
 docker exec $VLLM_CONTAINER ray status
+
+# Head node: download the model. Llama 3.3 is gated: accept the license on Hugging Face first.
+# run_cluster.sh does not pass HF_TOKEN into the container, so log in inside it.
+docker exec -it $VLLM_CONTAINER /bin/bash -c '
+  hf auth login
+  hf download meta-llama/Llama-3.3-70B-Instruct'
+
+# Head node: serve
 docker exec -it $VLLM_CONTAINER /bin/bash -c '
   vllm serve meta-llama/Llama-3.3-70B-Instruct \
     --tensor-parallel-size 2 --max-model-len 2048 \
@@ -120,7 +130,7 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 ./run-recipe.sh recipes/qwen3.8-27b-nvfp4-dflash2.yaml --setup
 ```
 
-`launch-cluster.sh --earlyoom` kills vLLM before memory pressure hangs the system. The same repo holds recipes for the Qwen3 models above: `qwen3-coder-next-fp8` (TP=2 by default) and `openai-gpt-oss-120b` (solo only). See [vllm/qwen3-coder-next.md](../vllm/qwen3-coder-next.md).
+`launch-cluster.sh --earlyoom` kills vLLM before memory pressure hangs the system (multi-node page). The same repo holds recipes for the Qwen3 models above: `qwen3-coder-next-fp8` (TP=2 by default) and `openai-gpt-oss-120b` (solo only). See [vllm/qwen3-coder-next.md](../vllm/qwen3-coder-next.md).
 
 ## 3c. TensorRT-LLM, Qwen3-235B-A22B NVFP4: official
 

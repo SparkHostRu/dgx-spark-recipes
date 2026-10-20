@@ -6,7 +6,7 @@
 | Image | `lmsysorg/sglang:latest-cu130` (CUDA 13; multi-arch with arm64 on Docker Hub, checked 2026-10-20) |
 | Expected speed, ISL/OSL 2048 | **120b: 50.5 tok/s with 1 user, 117.1 in total with 8, 203.1 with 32** · **20b: 69.6 / 219.3 / 521.9** (image `lmsysorg/sglang:spark`, [LMSYS, 2025-10-13](https://www.lmsys.org/blog/2025-10-13-nvidia-dgx-spark)). These are launch-day numbers, and the image has changed since |
 | Recipe source | NVIDIA playbook [`sglang`](https://build.nvidia.com/spark/sglang), Last Updated 07/31/2026 |
-| Status | **official.** The playbook's example is Qwen3-8B; gpt-oss-20b and -120b are on its tested-model list |
+| Status | **official**, *modified from the playbook*: `MODEL_HANDLE` changed from the example `Qwen/Qwen3-8B` to `openai/gpt-oss-120b`, which is on the playbook's tested-model list (as is gpt-oss-20b) |
 
 ## Run
 

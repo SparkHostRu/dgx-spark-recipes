@@ -1,6 +1,8 @@
 # vLLM OpenAI-compatible server + Open WebUI on one DGX Spark.
-# vllm service: the NGC container and serve command from the NVIDIA playbook "vllm"
-#   (https://build.nvidia.com/spark/vllm). Default model openai/gpt-oss-20b is the playbook's example.
+# Modified from the legacy NVIDIA "vllm" playbook (Apache-2.0):
+#   https://github.com/NVIDIA/dgx-spark-playbooks/blob/main/nvidia/vllm/README.md (06/12/2026)
+#   Changes: docker run -> compose, added --host/--port/--gpu-memory-utilization, HF cache volume,
+#   ipc: host, healthcheck. Default model openai/gpt-oss-20b is the playbook's example.
 # open-webui service: OPENAI_API_BASE_URL wiring as in the NVIDIA "trt-llm" playbook.
 # The compose form is untested. Images checked for linux/arm64 on 2026-10-20:
 #   nvcr.io/nvidia/vllm:26.05.post1-py3, ghcr.io/open-webui/open-webui:main

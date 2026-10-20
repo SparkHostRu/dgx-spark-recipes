@@ -5,8 +5,8 @@
 | Model | `llama3.3:70b` (dense 70B, Q4_K_M) |
 | Download size | 42.5 GB ([Ollama registry](https://ollama.com/library/llama3.3) manifest, checked 2026-10-20) |
 | Expected speed, 1 user | **~5 tok/s** ([dgx-spark-field-notes, hardware model](https://github.com/sergioamsilva/dgx-spark-field-notes/blob/main/docs/hardware-model.md), 2026-08). Llama **3.1** 70B Q4_K_M, same parameter count: 4.42 tok/s ([Ollama blog, 2025-10-23](https://ollama.com/blog/nvidia-spark-performance)), 4.58 tok/s ([LMSYS, 2025-10-13](https://www.lmsys.org/blog/2025-10-13-nvidia-dgx-spark)) |
-| Recipe source | Install: NVIDIA playbook [`ollama`](https://build.nvidia.com/spark/ollama). Tag: Ollama library |
-| Status | **community-measured** (approximate figure) |
+| Recipe source | Install: NVIDIA playbook [`ollama`](https://github.com/NVIDIA/dgx-spark-playbooks/blob/main/nvidia/ollama/README.md). Tag: Ollama library |
+| Status | Install: **official**. Tag: **community-measured** (approximate figure from field-notes) |
 
 ## Run
 

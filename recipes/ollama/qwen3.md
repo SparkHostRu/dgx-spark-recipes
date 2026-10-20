@@ -5,8 +5,8 @@
 | Models (Ollama tags) | `qwen3:30b-a3b` · `qwen3-coder:30b` · `qwen3-coder-next` · `qwen3-next:80b` |
 | Download size | 18.6 GB · 18.6 GB · 51.7 GB · 50.4 GB ([Ollama registry](https://ollama.com/library) manifests, checked 2026-10-20) |
 | Expected speed, 1 user | **`qwen3:30b-a3b`: 85.2 tok/s** · **`qwen3-coder-next` (q4_K_M): 59.2 tok/s** ([ss121, 2026-08-10](https://forums.developer.nvidia.com/t/measured-inference-benchmarks-on-a-single-dgx-spark-same-harness-across-ollama-llama-cpp-and-vllm-notes-data-published/379766)). `qwen3-coder:30b` and `qwen3-next:80b`: no published Ollama number on Spark found |
-| Expected speed, 8 users | `qwen3:30b-a3b` 87.5 · `qwen3-coder-next` 60.4 tok/s in total (Ollama does not batch) |
-| Recipe source | Install: NVIDIA playbook [`ollama`](https://build.nvidia.com/spark/ollama). Tags: Ollama library |
+| Expected speed, 8 users | `qwen3:30b-a3b` 87.5 · `qwen3-coder-next` 60.4 tok/s in total (default `OLLAMA_NUM_PARALLEL=1` serialises requests) |
+| Recipe source | Install: NVIDIA playbook [`ollama`](https://github.com/NVIDIA/dgx-spark-playbooks/blob/main/nvidia/ollama/README.md). Tags: Ollama library |
 | Status | `qwen3:30b-a3b`, `qwen3-coder-next`: **community-measured**. `qwen3-coder:30b`, `qwen3-next:80b`: **untested, from Ollama library** (tags exist; no Spark measurement) |
 
 ## Run

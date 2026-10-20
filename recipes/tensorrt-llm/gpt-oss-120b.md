@@ -4,14 +4,14 @@
 |---|---|
 | Model | [`openai/gpt-oss-120b`](https://huggingface.co/openai/gpt-oss-120b) (MXFP4). EAGLE-3 draft head: [`nvidia/gpt-oss-120b-Eagle3-long-context`](https://huggingface.co/nvidia/gpt-oss-120b-Eagle3-long-context) |
 | Image | `nvcr.io/nvidia/tensorrt-llm/release:1.3.0rc13` (plain serve) / `1.3.0rc12` (speculative decoding). Both have arm64 manifests (checked 2026-10-20) |
-| Memory | NVIDIA states one Spark is enough for gpt-oss-120b with EAGLE-3 ([playbook `speculative-decoding`](https://build.nvidia.com/spark/speculative-decoding)) |
+| Memory | NVIDIA states one Spark is enough for gpt-oss-120b with EAGLE-3 ([playbook `speculative-decoding`](https://github.com/NVIDIA/dgx-spark-playbooks/blob/main/nvidia/speculative-decoding/README.md)) |
 | Expected speed | **No published TensorRT-LLM tok/s for gpt-oss-120b on Spark found.** For comparison, vLLM reached 60.7 tok/s with 1 user ([vllm/gpt-oss-120b.md](../vllm/gpt-oss-120b.md)) |
-| Recipe source | NVIDIA playbooks [`trt-llm`](https://build.nvidia.com/spark/trt-llm) (Last Updated 04/28/2026) and [`speculative-decoding`](https://build.nvidia.com/spark/speculative-decoding) (04/20/2026) |
+| Recipe source | NVIDIA playbooks [`trt-llm`](https://build.nvidia.com/spark/trt-llm) (Last Updated 04/28/2026) and [`speculative-decoding`](https://github.com/NVIDIA/dgx-spark-playbooks/blob/main/nvidia/speculative-decoding/README.md) (04/20/2026) |
 | Status | **official** (gpt-oss-120b is in the trt-llm matrix; EAGLE-3 is the speculative-decoding playbook's own example) |
 
 ## Plain serve
 
-The playbook's example model is gpt-oss-20b. Here it is switched to 120b, which is also on the matrix.
+*Modified from the playbook*: `MODEL_HANDLE` changed from the example `openai/gpt-oss-20b` to `openai/gpt-oss-120b`, which is also on the matrix.
 
 ```bash
 export HF_TOKEN=<your-huggingface-token>

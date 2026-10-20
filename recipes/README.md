@@ -8,8 +8,16 @@ memory needed, expected speed (with a link to the measurement), where the recipe
 | Label | Meaning |
 |---|---|
 | **official** | Copied from an [NVIDIA DGX Spark playbook](https://github.com/NVIDIA/dgx-spark-playbooks). NVIDIA lists the model as tested for that engine. |
+| **vendor** | Copied from the tool vendor's own documentation (for example Unsloth's DGX Spark guide), not from an NVIDIA playbook. |
 | **community-measured** | Copied from a community source that published a measured result for this exact setup. |
 | **untested, from &lt;source&gt;** | We adapted it: swapped the model, changed flags, or turned a `docker run` into a compose file. The source did not publish a result for this exact command. |
+
+Two qualifiers can appear next to a label:
+
+- ***modified from &lt;source&gt;***: the block differs from the source, and the change is listed next to it.
+- ***abridged***: flags were removed from the source command, and the removed flags are listed next to it.
+
+Third-party licenses for quoted commands are in [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md).
 
 Nobody has re-run these commands for this repo yet. If you have, open a [benchmark issue](../.github/ISSUE_TEMPLATE/benchmark.yml) and we will update the label.
 

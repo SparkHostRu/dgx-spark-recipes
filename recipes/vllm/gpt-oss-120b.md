@@ -5,8 +5,8 @@
 | Model | [`openai/gpt-oss-120b`](https://huggingface.co/openai/gpt-oss-120b), MXFP4, 116.8B total / 5.1B active |
 | Memory | Weights ~59 GiB as GGUF ([llama.cpp bench](https://github.com/ggml-org/llama.cpp/blob/master/benches/dgx-spark/dgx-spark.md)). The full HF download is ~196 GB on disk ([field-notes](https://github.com/sergioamsilva/dgx-spark-field-notes/blob/main/docs/vllm-on-spark.md)). vLLM can use about 117–119 GB per node ([forum](https://forums.developer.nvidia.com/t/dgx-spark-multi-node-llm-inference-report-for-qwen3-235b-model/355126)), and whatever the weights leave inside `--gpu-memory-utilization` goes to KV cache |
 | Expected speed | **Path B: 60.7 tok/s with 1 user, 116–153 tok/s in total with 8 users, TTFT 131 ms** ([ss121, 2026-08-10](https://forums.developer.nvidia.com/t/measured-inference-benchmarks-on-a-single-dgx-spark-same-harness-across-ollama-llama-cpp-and-vllm-notes-data-published/379766)). The spark-vllm-docker changelog states "60 t/s on a single Spark" ([2026-01-29](https://github.com/eugr/spark-vllm-docker)). Path A: no published number for the current NGC image |
-| Recipe source | A: NVIDIA playbook [`vllm`](https://build.nvidia.com/spark/vllm) (NGC container). B: community [eugr/spark-vllm-docker](https://github.com/eugr/spark-vllm-docker), recipe `recipes/openai-gpt-oss-120b.yaml` |
-| Status | A: **official** (gpt-oss-120b is in the playbook's tested MXFP4 matrix). B: **community-measured** |
+| Recipe source | A: legacy NVIDIA playbook [`nvidia/vllm/README.md`](https://github.com/NVIDIA/dgx-spark-playbooks/blob/main/nvidia/vllm/README.md) (Last Updated 06/12/2026). The current [build.nvidia.com/spark/vllm](https://build.nvidia.com/spark/vllm) page (09/14/2026) is built around NVIDIA Sync and points to [recipes.vllm.ai](https://recipes.vllm.ai/browse?panel=open&hw=dgx_spark_gb10) and spark-vllm-docker; the NGC commands and the tested-model matrix are only in the GitHub README. B: community [eugr/spark-vllm-docker](https://github.com/eugr/spark-vllm-docker), recipe `recipes/openai-gpt-oss-120b.yaml` |
+| Status | A: **official** (gpt-oss-120b is in the legacy playbook's tested MXFP4 matrix). B: **community-measured** |
 
 ## Path A: official NGC container (simplest)
 
@@ -22,7 +22,7 @@ nvcr.io/nvidia/vllm:${LATEST_VLLM_VERSION} \
 vllm serve ${HF_MODEL_HANDLE}
 ```
 
-To keep the download between runs, add `-v ~/.cache/huggingface:/root/.cache/huggingface -e HF_TOKEN`. *(untested addition)*
+To keep the download between runs, add `-v ~/.cache/huggingface:/root/.cache/huggingface -e HF_TOKEN`. *(modified from the playbook command; untested)*
 
 ## Path B: MXFP4 CUTLASS build (fastest measured)
 
@@ -71,7 +71,7 @@ curl http://localhost:8000/v1/chat/completions -H 'Content-Type: application/jso
 }'
 ```
 
-`max_tokens` must leave room for reasoning. Otherwise thinking models return an empty `content` with `finish_reason: length` (NVIDIA playbook troubleshooting).
+`max_tokens` must leave room for reasoning. Otherwise thinking models return an empty `content` with `finish_reason: length` (troubleshooting in the legacy vLLM playbook).
 
 ## Notes
 

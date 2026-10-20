@@ -9,13 +9,13 @@
 - Также: кластер из двух Spark, дообучение QLoRA через Unsloth, Open WebUI, готовые docker compose
 - [`benchmarks/benchmarks.csv`](benchmarks/benchmarks.csv): 138 опубликованных замеров на GB10, у каждого ссылка на источник и уровень надёжности
 
-Все факты проверены **2026-10-20**. У каждого рецепта есть статус: **official** (playbook NVIDIA), **community-measured** (команда из источника, где опубликован замер) или **untested, from &lt;source&gt;** (мы адаптировали команду, но её никто не проверял). Подробнее в [recipes/README.md](recipes/README.md). Сами рецепты написаны на английском.
+Все факты проверены **2026-10-20**. У каждого рецепта есть статус: **official** (playbook NVIDIA), **vendor** (документация производителя инструмента), **community-measured** (команда из источника, где опубликован замер) или **untested, from &lt;source&gt;** (мы адаптировали команду, но её никто не проверял). Блоки, которые отличаются от источника, помечены *modified from* или *abridged*. Подробнее в [recipes/README.md](recipes/README.md). Сами рецепты написаны на английском.
 
 ---
 
 ## Быстрый старт: Ollama, около 2 минут плюс загрузка 14 ГБ
 
-Команда установки взята из [playbook `ollama`](https://build.nvidia.com/spark/ollama) от NVIDIA. Модель `gpt-oss:20b` выбрана потому, что Ollama сама замеряла её на Spark: 58,3 ток/с ([блог Ollama](https://ollama.com/blog/nvidia-spark-performance)).
+Команда установки взята из [playbook `ollama`](https://github.com/NVIDIA/dgx-spark-playbooks/blob/main/nvidia/ollama/README.md) от NVIDIA. В playbook загружается `qwen2.5:32b`, а мы берём `gpt-oss:20b`, потому что Ollama сама замеряла эту модель на Spark: 58,3 ток/с ([блог Ollama](https://ollama.com/blog/nvidia-spark-performance)). *Modified from playbook: заменён тег модели.*
 
 ```bash
 curl -fsSL https://ollama.com/install.sh | sh
@@ -54,7 +54,7 @@ docker run -d -p 8080:8080 --gpus=all \
 
 - **MoE быстрее dense.** Генерация упирается в пропускную способность памяти (273 ГБ/с), а MoE-модель читает за токен только активных экспертов. gpt-oss-120b (5,1B активных) работает примерно в 8 раз быстрее Llama 3.3 70B.
 - **Один пользователь:** llama.cpp и Ollama стартуют за секунды и вполне конкурентны. Хорошо собранный vLLM в сравнении на одном харнессе выиграл на 3 моделях из 4 ([ss121](https://github.com/sergioamsilva/dgx-spark-field-notes)).
-- **Несколько пользователей, API, агенты:** vLLM или SGLang. Ollama не батчит: при 8 параллельных запросах суммарная скорость равна скорости одного запроса.
+- **Несколько пользователей, API, агенты:** vLLM или SGLang. С настройкой по умолчанию `OLLAMA_NUM_PARALLEL=1` Ollama обрабатывает запросы по очереди: в замере на одном харнессе 8 параллельных запросов дали ту же суммарную скорость, что и один.
 
 ---
 
@@ -85,7 +85,7 @@ docker run -d -p 8080:8080 --gpus=all \
 
 ## Официальные ресурсы NVIDIA
 
-- **Playbooks:** [build.nvidia.com/spark](https://build.nvidia.com/spark), исходники в [NVIDIA/dgx-spark-playbooks](https://github.com/NVIDIA/dgx-spark-playbooks). Чаще всего здесь используются: [ollama](https://build.nvidia.com/spark/ollama), [open-webui](https://build.nvidia.com/spark/open-webui), [vllm](https://build.nvidia.com/spark/vllm), [llama-cpp](https://build.nvidia.com/spark/llama-cpp), [sglang](https://build.nvidia.com/spark/sglang), [trt-llm](https://build.nvidia.com/spark/trt-llm), [speculative-decoding](https://build.nvidia.com/spark/speculative-decoding), [connect-two-sparks](https://build.nvidia.com/spark/connect-two-sparks), [nccl](https://build.nvidia.com/spark/nccl), [unsloth](https://build.nvidia.com/spark/unsloth), [nemo-fine-tune](https://build.nvidia.com/spark/nemo-fine-tune), [nvfp4-quantization](https://build.nvidia.com/spark/nvfp4-quantization)
+- **Playbooks:** [build.nvidia.com/spark](https://build.nvidia.com/spark), исходники в [NVIDIA/dgx-spark-playbooks](https://github.com/NVIDIA/dgx-spark-playbooks). Чаще всего здесь используются: [ollama](https://github.com/NVIDIA/dgx-spark-playbooks/blob/main/nvidia/ollama/README.md), [open-webui](https://build.nvidia.com/spark/open-webui), [vllm](https://build.nvidia.com/spark/vllm) (14.09.2026 страницу перестроили вокруг NVIDIA Sync, теперь она ведёт на [recipes.vllm.ai](https://recipes.vllm.ai/browse?panel=open&hw=dgx_spark_gb10) и spark-vllm-docker. NGC-команды и матрица протестированных моделей, которые мы цитируем, остались в [legacy README на GitHub](https://github.com/NVIDIA/dgx-spark-playbooks/blob/main/nvidia/vllm/README.md)), [llama-cpp](https://build.nvidia.com/spark/llama-cpp), [sglang](https://build.nvidia.com/spark/sglang), [trt-llm](https://build.nvidia.com/spark/trt-llm), [speculative-decoding](https://github.com/NVIDIA/dgx-spark-playbooks/blob/main/nvidia/speculative-decoding/README.md), [connect-two-sparks](https://build.nvidia.com/spark/connect-two-sparks), [nccl](https://github.com/NVIDIA/dgx-spark-playbooks/blob/main/nvidia/playbook-nccl/README.md), [unsloth](https://build.nvidia.com/spark/unsloth), [nemo-fine-tune](https://build.nvidia.com/spark/nemo-fine-tune), [nvfp4-quantization](https://build.nvidia.com/spark/nvfp4-quantization)
 - **Характеристики:** [DGX Spark Hardware Overview](https://docs.nvidia.com/dgx/dgx-spark/hardware.html)
 - **Версии DGX OS и прошивок:** [DGX Spark Release Notes](https://docs.nvidia.com/dgx/dgx-spark/release-notes.html)
 - **Форум:** [NVIDIA Developer Forums, DGX Spark / GB10](https://forums.developer.nvidia.com/)
@@ -96,7 +96,7 @@ docker run -d -p 8080:8080 --gpus=all \
 
 ## Подводные камни
 
-**Железо в одной строке:** у GB10 20 ядер Arm и GPU Blackwell (compute capability 12.1), у них общие 128 ГБ LPDDR5x с пропускной способностью 273 ГБ/с ([спецификация](https://docs.nvidia.com/dgx/dgx-spark/hardware.html)). С 2026-10-23 OEM-производители продают ещё и версию на 64 ГБ ([StorageReview](https://www.storagereview.com/news/nvidia-dgx-spark-64gb-october-23-4999-two-units-cluster-to-128gb)). Этот репозиторий рассчитан на 128 ГБ.
+**Железо в одной строке:** у GB10 20 ядер Arm и GPU Blackwell, у них общие 128 ГБ LPDDR5x с пропускной способностью 273 ГБ/с ([спецификация](https://docs.nvidia.com/dgx/dgx-spark/hardware.html)). Compute capability GPU — 12.1 (`sm_121`): llama.cpp выводит «NVIDIA GB10, compute capability 12.1» ([#15396](https://github.com/ggml-org/llama.cpp/discussions/15396)), а [playbook llama-cpp](https://build.nvidia.com/spark/llama-cpp) собирает под `121a-real`. С 2026-10-23 OEM-производители продают ещё и версию на 64 ГБ ([StorageReview](https://www.storagereview.com/news/nvidia-dgx-spark-64gb-october-23-4999-two-units-cluster-to-128gb)). Этот репозиторий рассчитан на 128 ГБ.
 
 ### 1. Архитектура aarch64: нужны arm64-образы
 
@@ -104,9 +104,9 @@ GB10 — это ARM64, и образ без варианта `linux/arm64` пр�
 
 ### 2. Unified memory ведёт себя иначе
 
-- CPU и GPU делят одни и те же 128 ГБ. Моделям реально доступно **117–121 ГиБ** ([форум](https://forums.developer.nvidia.com/t/dgx-spark-multi-node-llm-inference-report-for-qwen3-235b-model/355126), [field-notes](https://github.com/sergioamsilva/dgx-spark-field-notes)). Под дисплей по умолчанию уходит 2 ГБ; с июля 2026 в BIOS можно выставить 4 ГБ ([release notes](https://docs.nvidia.com/dgx/dgx-spark/release-notes.html)).
-- `nvidia-smi --query-gpu` показывает `N/A` в полях памяти. Для UMA это нормально, смотрите обычный `nvidia-smi` (playbook vLLM).
-- Страничный кэш сам GPU не отдаётся. Если модель не грузится, хотя память вроде свободна, выполните `sudo sh -c 'sync; echo 3 > /proc/sys/vm/drop_caches'` (так советует большинство playbook). В выводе `free` смотрите на колонку `available`, а не на `used`.
+- CPU и GPU делят одни и те же 128 ГБ. vLLM на узле реально может занять около **117 ГБ** ([форум](https://forums.developer.nvidia.com/t/dgx-spark-multi-node-llm-inference-report-for-qwen3-235b-model/355126)); ОС видит около 121 ГиБ unified memory ([field-notes](https://github.com/sergioamsilva/dgx-spark-field-notes)). Под дисплей по умолчанию уходит 2 ГБ; с июля 2026 в BIOS можно выставить 4 ГБ ([release notes](https://docs.nvidia.com/dgx/dgx-spark/release-notes.html)).
+- `nvidia-smi --query-gpu` показывает `N/A` в полях памяти. Для UMA это нормально, смотрите обычный `nvidia-smi` ([legacy playbook vLLM](https://github.com/NVIDIA/dgx-spark-playbooks/blob/main/nvidia/vllm/README.md)).
+- Страничный кэш сам GPU не отдаётся. Если модель не грузится, хотя память вроде свободна, выполните `sudo sh -c 'sync; echo 3 > /proc/sys/vm/drop_caches'` (так советуют многие playbook NVIDIA). В выводе `free` смотрите на колонку `available`, а не на `used`.
 - Держите в памяти только одну большую модель за раз.
 - NIM-контейнеры на UMA ограничивают `gpu_memory_utilization` значением 0,50, и модели около 75 ГБ падают по OOM. Берите обычный `vllm/vllm-openai` ([форум](https://forums.developer.nvidia.com/t/nemotron-3-super-120b-a12b-nvfp4-on-single-dgx-spark-23-45-tok-s-spark-arena-com-benhmarks/370070)).
 
@@ -125,7 +125,7 @@ GB10 — это ARM64, и образ без варианта `linux/arm64` пр�
 
 ### 5. Версии DGX OS, драйвера и прошивок
 
-- Текущий стек Founders Edition ([release notes](https://docs.nvidia.com/dgx/dgx-spark/release-notes.html), прочитано 2026-10-20): **DGX OS 7.5.0** (Ubuntu 24.04), **драйвер 580.159.03**, **CUDA 13.0.2**, ядро 6.17.
+- Текущий стек Founders Edition ([release notes](https://docs.nvidia.com/dgx/dgx-spark/release-notes.html), прочитано 2026-10-20): **DGX OS 7.5.0**, **драйвер 580.159.03**, **CUDA 13.0.2**, ядро 6.17.
 - С июня 2026 OTA-обновления по умолчанию не ставятся при первичной настройке. Обновите свежую машину, прежде чем мерить на ней скорость.
 - В феврале 2026 вышло исправление регрессии производительности на нескольких Spark, которая появилась после DGX OS 7.4.0.
 - Партнёрские системы на GB10 (ASUS, Dell, HP, Lenovo и другие) могут получать прошивки и обновления ОС позже Founders Edition.
@@ -133,11 +133,11 @@ GB10 — это ARM64, и образ без варианта `linux/arm64` пр�
 
 ### 6. Мелочи, на которые легко потерять полдня
 
-- **Медленная загрузка модели через mmap:** в llama.cpp используйте `--no-mmap` (около 20 ГБ сверху) и/или поднимите read-ahead NVMe до 8192 КБ ([llama.cpp #16578](https://github.com/ggml-org/llama.cpp/discussions/16578), [field-notes](https://github.com/sergioamsilva/dgx-spark-field-notes/blob/main/docs/loading-performance.md)).
+- **Медленная загрузка модели через mmap:** отключите mmap в llama.cpp (около 20 ГБ памяти сверху). В текущем master это `-lm none`; в старых сборках, например b7941, на которой сняты опубликованные цифры, — `--no-mmap` / `-mmp 0`. Ещё можно поднять read-ahead NVMe до 8192 КБ ([llama.cpp #16578](https://github.com/ggml-org/llama.cpp/discussions/16578), [field-notes](https://github.com/sergioamsilva/dgx-spark-field-notes/blob/main/docs/loading-performance.md)).
 - **Пустой `content` и `finish_reason: length`:** thinking-модель потратила весь `max_tokens` на рассуждение. Увеличьте `max_tokens` (playbook NVIDIA).
 - **`PermissionError` на `~/.cache/huggingface` или кэш не удаляется:** контейнеры качают веса от root. Помогает `sudo chown -R "$USER:$USER" ~/.cache/huggingface`.
 - **Spark выключается под тяжёлой нагрузкой:** `sudo nvidia-smi -lgc 200,2150` снижает частоту GPU; после перезагрузки настройка сбрасывается ([spark-vllm-docker](https://github.com/eugr/spark-vllm-docker)).
-- **Первый запрос медленный:** холодный запрос дал 16 ток/с на модели, которая потом стабильно выдавала около 53. Перед замером отбрасывайте прогревочный запрос.
+- **Первый запрос медленный:** холодный запрос дал 16 ток/с на модели, которая потом стабильно выдавала около 53 ([field-notes](https://github.com/sergioamsilva/dgx-spark-field-notes/blob/main/docs/vllm-on-spark.md)). Перед замером отбрасывайте прогревочный запрос.
 
 ---
 
@@ -151,6 +151,7 @@ recipes/            по файлу на пару «движок × модель
   open-webui/open-webui.md
 compose/            vLLM + Open WebUI, Ollama + Open WebUI
 benchmarks/         benchmarks.csv и методология
+THIRD_PARTY_NOTICES.md, LICENSES/   лицензии цитируемых команд (Apache-2.0, MIT)
 ```
 
 ## Как помочь
@@ -159,7 +160,7 @@ benchmarks/         benchmarks.csv и методология
 
 ## Лицензия
 
-[MIT](LICENSE). Команды из playbook NVIDIA и репозиториев сообщества приведены для справки и остаются под исходными лицензиями; у каждой есть ссылка на источник.
+[MIT](LICENSE). Команды из playbook NVIDIA (Apache-2.0) и репозиториев сообщества остаются под исходными лицензиями, подробнее в [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). У каждой цитируемой команды есть ссылка на источник.
 
 ---
 
