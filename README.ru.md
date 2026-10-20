@@ -7,7 +7,7 @@
 - Модели: gpt-oss-120b / 20b, Qwen3 (30B-A3B, Coder 30B-A3B, Coder-Next), Llama 3.3 70B, Qwen3-235B на двух Spark
 - Движки: Ollama, vLLM, llama.cpp, SGLang, TensorRT-LLM
 - Также: кластер из двух Spark, дообучение QLoRA через Unsloth, Open WebUI, готовые docker compose
-- [`benchmarks/benchmarks.csv`](benchmarks/benchmarks.csv): 138 опубликованных замеров на GB10, у каждого ссылка на источник и уровень надёжности
+- [`benchmarks/benchmarks.csv`](benchmarks/benchmarks.csv): 140 опубликованных замеров на GB10, у каждого ссылка на источник и уровень надёжности
 
 Все факты проверены **2026-10-20**. У каждого рецепта есть статус: **official** (playbook NVIDIA), **vendor** (документация производителя инструмента), **community-measured** (команда из источника, где опубликован замер) или **untested, from &lt;source&gt;** (мы адаптировали команду, но её никто не проверял). Блоки, которые отличаются от источника, помечены *modified from* или *abridged*. Подробнее в [recipes/README.md](recipes/README.md). Сами рецепты написаны на английском.
 
@@ -54,7 +54,7 @@ docker run -d -p 8080:8080 --gpus=all \
 
 - **MoE быстрее dense.** Генерация упирается в пропускную способность памяти (273 ГБ/с), а MoE-модель читает за токен только активных экспертов. gpt-oss-120b (5,1B активных) работает примерно в 8 раз быстрее Llama 3.3 70B.
 - **Один пользователь:** llama.cpp и Ollama стартуют за секунды и вполне конкурентны. Хорошо собранный vLLM в сравнении на одном харнессе выиграл на 3 моделях из 4 ([ss121](https://github.com/sergioamsilva/dgx-spark-field-notes)).
-- **Несколько пользователей, API, агенты:** vLLM или SGLang. С настройкой по умолчанию `OLLAMA_NUM_PARALLEL=1` Ollama обрабатывает запросы по очереди: в замере на одном харнессе 8 параллельных запросов дали ту же суммарную скорость, что и один.
+- **Несколько пользователей, API, агенты:** vLLM или SGLang. С настройкой по умолчанию `OLLAMA_NUM_PARALLEL=1` ([FAQ Ollama](https://docs.ollama.com/faq)) Ollama обрабатывает запросы по очереди: в замере на одном харнессе 8 параллельных запросов дали ту же суммарную скорость, что и один.
 
 ---
 
@@ -74,10 +74,12 @@ docker run -d -p 8080:8080 --gpus=all \
 | Qwen3-Coder-Next | vLLM | INT4 AutoRound | 74,8 (1) · 289,0 (8) | — | 1× | [ss121](https://forums.developer.nvidia.com/t/measured-inference-benchmarks-on-a-single-dgx-spark-same-harness-across-ollama-llama-cpp-and-vllm-notes-data-published/379766) | 2026-08-10 |
 | Qwen3-14B | TensorRT-LLM | NVFP4 | 22,7 (1) | 5 929 | 1× | [NVIDIA](https://developer.nvidia.com/blog/how-nvidia-dgx-sparks-performance-enables-intensive-ai-tasks) | 2025-10-24 |
 | Llama 3.1 70B | Ollama 0.12.6 | Q4_K_M | 4,4 (1) | 1 911 | 1× | [Ollama](https://ollama.com/blog/nvidia-spark-performance) | 2025-10-23 |
-| Nemotron 3 Super 120B-A12B | vLLM nightly + MTP | NVFP4 | 23,45 (1) | — | 1× | [форум](https://forums.developer.nvidia.com/t/nemotron-3-super-120b-a12b-nvfp4-on-single-dgx-spark-23-45-tok-s-spark-arena-com-benhmarks/370070) | 2026-05-13 |
+| Nemotron 3 Super 120B-A12B | vLLM nightly + MTP | NVFP4 | 23,45 (1) | — | 1× | [форум](https://forums.developer.nvidia.com/t/nemotron-3-super-120b-a12b-nvfp4-on-single-dgx-spark-23-45-tok-s-spark-arena-com-benhmarks/370070) | 2026-05-15¹ |
 | gpt-oss-120b | vLLM 0.17.0 + патчи, TP=2 | MXFP4 | 81,5 (1) | 6 069 | 2× | [форум](https://forums.developer.nvidia.com/t/vllm-0-17-0-mxfp4-patches-for-dgx-spark-qwen3-5-35b-a3b-70-tok-s-gpt-oss-120b-80-tok-s-tp-2/362824) | 2026-03-11 |
 | Qwen3-235B-A22B | TensorRT-LLM 1.2.0rc5, TP=2 | NVFP4 | 21,65 (1) | — | 2× | [форум](https://forums.developer.nvidia.com/t/question-on-inference-performance-results-of-qwen3-235b-a22b-on-2x-dgx-spark/355053) | 2025-12-19 |
 | Qwen3.5-397B-A17B | vLLM, TP=4 | INT4 AutoRound | ~37 (1) · ~103 (4) | — | 4× | [spark-vllm-docker](https://github.com/eugr/spark-vllm-docker) | 2026-03-12 |
+
+¹ Дата поста на форуме с цифрами; сабмит в Spark Arena и начало темы — 2026-05-13.
 
 Лидерборд сообщества с рецептом к каждому результату: [Spark Arena](https://spark-arena.com/leaderboard). Его данные мы пока не импортировали.
 
@@ -104,7 +106,7 @@ GB10 — это ARM64, и образ без варианта `linux/arm64` пр�
 
 ### 2. Unified memory ведёт себя иначе
 
-- CPU и GPU делят одни и те же 128 ГБ. vLLM на узле реально может занять около **117 ГБ** ([форум](https://forums.developer.nvidia.com/t/dgx-spark-multi-node-llm-inference-report-for-qwen3-235b-model/355126)); ОС видит около 121 ГиБ unified memory ([field-notes](https://github.com/sergioamsilva/dgx-spark-field-notes)). Под дисплей по умолчанию уходит 2 ГБ; с июля 2026 в BIOS можно выставить 4 ГБ ([release notes](https://docs.nvidia.com/dgx/dgx-spark/release-notes.html)).
+- CPU и GPU делят одни и те же 128 ГБ. Реально доступно около **117 ГБ** ([форум](https://forums.developer.nvidia.com/t/dgx-spark-multi-node-llm-inference-report-for-qwen3-235b-model/355126)); ОС видит около 121 ГиБ unified memory ([field-notes](https://github.com/sergioamsilva/dgx-spark-field-notes)). Под дисплей по умолчанию уходит 2 ГБ; с июля 2026 в BIOS можно выставить 4 ГБ ([release notes](https://docs.nvidia.com/dgx/dgx-spark/release-notes.html)).
 - `nvidia-smi --query-gpu` показывает `N/A` в полях памяти. Для UMA это нормально, смотрите обычный `nvidia-smi` ([legacy playbook vLLM](https://github.com/NVIDIA/dgx-spark-playbooks/blob/main/nvidia/vllm/README.md)).
 - Страничный кэш сам GPU не отдаётся. Если модель не грузится, хотя память вроде свободна, выполните `sudo sh -c 'sync; echo 3 > /proc/sys/vm/drop_caches'` (так советуют многие playbook NVIDIA). В выводе `free` смотрите на колонку `available`, а не на `used`.
 - Держите в памяти только одну большую модель за раз.
@@ -137,7 +139,7 @@ GB10 — это ARM64, и образ без варианта `linux/arm64` пр�
 - **Пустой `content` и `finish_reason: length`:** thinking-модель потратила весь `max_tokens` на рассуждение. Увеличьте `max_tokens` (playbook NVIDIA).
 - **`PermissionError` на `~/.cache/huggingface` или кэш не удаляется:** контейнеры качают веса от root. Помогает `sudo chown -R "$USER:$USER" ~/.cache/huggingface`.
 - **Spark выключается под тяжёлой нагрузкой:** `sudo nvidia-smi -lgc 200,2150` снижает частоту GPU; после перезагрузки настройка сбрасывается ([spark-vllm-docker](https://github.com/eugr/spark-vllm-docker)).
-- **Первый запрос медленный:** холодный запрос дал 16 ток/с на модели, которая потом стабильно выдавала около 53 ([field-notes](https://github.com/sergioamsilva/dgx-spark-field-notes/blob/main/docs/vllm-on-spark.md)). Перед замером отбрасывайте прогревочный запрос.
+- **Первый запрос медленный:** в field-notes первый, холодный запрос шёл со скоростью 16 ток/с, а после прогрева около 53 ток/с ([troubleshooting](https://github.com/sergioamsilva/dgx-spark-field-notes/blob/main/docs/troubleshooting.md)). Перед замером отбрасывайте прогревочный запрос.
 
 ---
 

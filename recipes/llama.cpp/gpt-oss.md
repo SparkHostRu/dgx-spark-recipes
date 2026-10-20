@@ -37,9 +37,9 @@ To reproduce the AIME25 setup, add the sampling and reasoning flags back.
 
 ```bash
 # on build b7941, as published
-./build/bin/llama-bench -m <path/to/first-gguf-shard> -fa 1 -d 0,4096,8192,16384,32768 -p 2048 -n 32 -ub 2048 -mmp 0
+./build/bin/llama-bench -m <path/to/gpt-oss-120b-MXFP4.gguf> -fa 1 -d 0,4096,8192,16384,32768 -p 2048 -n 32 -ub 2048 -mmp 0
 # on current master (-mmp was replaced by -lm)
-./build/bin/llama-bench -m <path/to/first-gguf-shard> -fa 1 -d 0,4096,8192,16384,32768 -p 2048 -n 32 -ub 2048 -lm none
+./build/bin/llama-bench -m <path/to/gpt-oss-120b-MXFP4.gguf> -fa 1 -d 0,4096,8192,16384,32768 -p 2048 -n 32 -ub 2048 -lm none
 ```
 
-`-hf` downloads into the llama.cpp cache. Point `-m` at the first GGUF file of the model. To check out b7941, see [build.md](build.md#benchmark-the-way-upstream-does).
+`-hf` downloads into the llama.cpp cache. Point `-m` at the model file: `ggml-org/gpt-oss-120b-GGUF` now ships a single `gpt-oss-120b-MXFP4.gguf`. Older revisions were split into shards; in that case use the first shard. To check out b7941, see [build.md](build.md#benchmark-the-way-upstream-does).

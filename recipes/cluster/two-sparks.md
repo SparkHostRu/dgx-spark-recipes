@@ -6,8 +6,8 @@ Two Sparks connect directly with one QSFP cable through the ConnectX-7 NICs (up 
 |---|---|
 | gpt-oss-120b, patched vLLM 0.17.0, TP=2 | **81.5 tok/s** decode, 6,069 tok/s prefill (pp2048) ([forum, 2026-03-11](https://forums.developer.nvidia.com/t/vllm-0-17-0-mxfp4-patches-for-dgx-spark-qwen3-5-35b-a3b-70-tok-s-gpt-oss-120b-80-tok-s-tp-2/362824)) |
 | Qwen3-235B-A22B NVFP4, TensorRT-LLM, TP=2 | **21.65 tok/s** (trtllm-bench, ISL/OSL 128) ([forum, 2025-12-19](https://forums.developer.nvidia.com/t/question-on-inference-performance-results-of-qwen3-235b-a22b-on-2x-dgx-spark/355053)) |
-| Qwen3-235B-A22B UD-Q4_K_XL, llama.cpp RPC | **~12.5 tok/s** (one Spark: ~1.8 tok/s) ([forum, 2025-12-17](https://forums.developer.nvidia.com/t/dgx-spark-multi-node-llm-inference-report-for-qwen3-235b-model/355126)) |
-| NCCL all_gather, community | ~22 GB/s ([same thread](https://forums.developer.nvidia.com/t/dgx-spark-multi-node-llm-inference-report-for-qwen3-235b-model/355126)) |
+| Qwen3-235B-A22B UD-Q4_K_XL, llama.cpp RPC | **~12.5 tok/s** (one Spark: ~1.8 tok/s) ([forum, 2025-12-18](https://forums.developer.nvidia.com/t/dgx-spark-multi-node-llm-inference-report-for-qwen3-235b-model/355126)) |
+| NCCL tests, community | Thread author: 39.34 GB/s (questioned in the thread as exceeding a 200 Gb/s link; a reply suggests it counts both directions). Another participant (#16): `gather_perf` ~22 GB/s ([same thread](https://forums.developer.nvidia.com/t/dgx-spark-multi-node-llm-inference-report-for-qwen3-235b-model/355126)) |
 
 ## 1. Network: official
 
@@ -198,10 +198,10 @@ docker exec \
 
 ## 3d. llama.cpp RPC: community
 
-Source: [forum, 2025-12-17](https://forums.developer.nvidia.com/t/dgx-spark-multi-node-llm-inference-report-for-qwen3-235b-model/355126). Status: **community-measured** (~12.5 tok/s, Qwen3-235B UD-Q4_K_XL, QSFP 200GbE, MTU 9000).
+Source: [forum, 2025-12-18](https://forums.developer.nvidia.com/t/dgx-spark-multi-node-llm-inference-report-for-qwen3-235b-model/355126). Status: **community-measured** (~12.5 tok/s, Qwen3-235B UD-Q4_K_XL, QSFP 200GbE, MTU 9000).
 
 ```bash
-cmake -B build -DGGML_CUDA=ON -DGGML_RPC=ON -DLLAMA_CURL=OFF   # then a Release build
+cmake -B build -DGGML_CUDA=ON -DGGML_RPC=ON -DLLAMA_CURL=OFF   # then a Release build (LLAMA_CURL is deprecated on current master)
 ./rpc-server -H <NODE_IP> -p 50052                               # on each node
 ./llama-server -m <model part 1> --rpc "169.254.1.2:50052" -ngl 999 -fit off --port 8082 -c 2048
 ```

@@ -7,7 +7,7 @@
 | Expected speed, 1 user | **120b: 42.1 tok/s** ([ss121, 2026-08-10](https://forums.developer.nvidia.com/t/measured-inference-benchmarks-on-a-single-dgx-spark-same-harness-across-ollama-llama-cpp-and-vllm-notes-data-published/379766)), 41.1 tok/s ([Ollama blog, v0.12.6, 2025-10-23](https://ollama.com/blog/nvidia-spark-performance)) · **20b: 58.3 tok/s** (Ollama blog) |
 | Expected speed, 8 users | 120b: 42.5 tok/s in total (ss121). With the default `OLLAMA_NUM_PARALLEL=1`, Ollama serialises requests, so 8 users share one user's speed |
 | Recipe source | Install: NVIDIA playbook [`ollama`](https://github.com/NVIDIA/dgx-spark-playbooks/blob/main/nvidia/ollama/README.md) (Last Updated 10/12/2025). Tuning: [dgx-spark-field-notes](https://github.com/sergioamsilva/dgx-spark-field-notes/blob/main/docs/serving-stacks.md) |
-| Status | Install: **official**. Model tags `gpt-oss:120b` / `gpt-oss:20b`: **untested, from ollama playbook** (the playbook pulls `qwen2.5:32b`; the speeds above come from Ollama's blog and ss121, not from this exact command). Env tuning: **community-measured** |
+| Status | Install: **official**. Model tags `gpt-oss:120b` / `gpt-oss:20b`: **untested, from ollama playbook** (the playbook pulls `qwen2.5:32b`; the speeds above come from Ollama's blog and ss121, not from this exact command). Env tuning: **untested, from field-notes** (recommended settings; only flash attention and the q8_0 KV cache were used in their measured runs) |
 
 ## Run
 
@@ -29,7 +29,7 @@ curl http://localhost:11434/api/chat -d '{
 
 ## Tuning
 
-The field-notes measurements ran Ollama with these server variables:
+Field-notes [recommend](https://github.com/sergioamsilva/dgx-spark-field-notes/blob/main/docs/serving-stacks.md) these server variables. Their measured runs used the first two, flash attention and the q8_0 KV cache ([RESULTS.md](https://github.com/sergioamsilva/dgx-spark-field-notes/blob/main/benchmarks/RESULTS.md)):
 
 ```bash
 OLLAMA_FLASH_ATTENTION=1

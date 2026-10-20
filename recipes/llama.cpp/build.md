@@ -18,6 +18,7 @@ cmake --build build --config Release --target llama-server -j
 ```
 
 - `121a-real` targets compute capability 12.1, which is GB10.
+- `-DGGML_CURL=ON` is quoted as the playbook has it. Current llama.cpp `master` has no `GGML_CURL` option (CMake ignores it), and the older `LLAMA_CURL` option is deprecated (`CMakeLists.txt`).
 - `-DGGML_RPC=ON` lets you split one model across two Sparks: [cluster/two-sparks.md](../cluster/two-sparks.md#3d-llamacpp-rpc-community).
 - To build the benchmark tools as well, drop `--target llama-server`.
 
@@ -53,5 +54,5 @@ The cmake flags in the b7941 block are the playbook's, minus the `llama-server`-
 
 ## Gotchas
 
-- **Loading is slow with mmap on DGX OS.** Disable mmap: `-lm none` on current master, `--no-mmap` (`-mmp 0` in llama-bench) on older builds such as b7941. In [#16578](https://github.com/ggml-org/llama.cpp/discussions/16578) (2025-11-02), eugr suspects the kernel option `NO_PAGE_MAPCOUNT` in 6.17. Field-notes estimate that disabling mmap costs ~20 GB of extra memory, and also suggest raising NVMe read-ahead to 8192 KB ([loading-performance](https://github.com/sergioamsilva/dgx-spark-field-notes/blob/main/docs/loading-performance.md)).
+- **Loading is slow with mmap on DGX OS.** Disable mmap: `-lm none` on current master, `--no-mmap` (`-mmp 0` in llama-bench) on older builds such as b7941. The sources disagree on the cause. In [#16578](https://github.com/ggml-org/llama.cpp/discussions/16578) (2025-11-02), eugr got *fast* loading after compiling NVIDIA's 6.17.1 kernel and credits the kernel option `NO_PAGE_MAPCOUNT`, introduced in 6.17. [Field-notes](https://github.com/sergioamsilva/dgx-spark-field-notes/blob/main/docs/troubleshooting.md) still see slow `mmap` on kernels up to 6.17.1. Field-notes estimate that disabling mmap costs ~20 GB of extra memory, and also suggest raising NVMe read-ahead to 8192 KB ([loading-performance](https://github.com/sergioamsilva/dgx-spark-field-notes/blob/main/docs/loading-performance.md)).
 - By default `llama-server` tries to allocate the full context and 4 parallel slots. Lower `--ctx-size` if you hit OOM (playbook).

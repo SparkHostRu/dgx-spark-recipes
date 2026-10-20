@@ -7,7 +7,7 @@
 - Models: gpt-oss-120b / 20b, Qwen3 (30B-A3B, Coder 30B-A3B, Coder-Next), Llama 3.3 70B, Qwen3-235B on two Sparks
 - Engines: Ollama, vLLM, llama.cpp, SGLang, TensorRT-LLM
 - Also covered: two-Spark clusters, QLoRA fine-tuning with Unsloth, Open WebUI, docker compose files
-- [`benchmarks/benchmarks.csv`](benchmarks/benchmarks.csv): 138 published GB10 measurements, each with a source link and a reliability level
+- [`benchmarks/benchmarks.csv`](benchmarks/benchmarks.csv): 140 published GB10 measurements, each with a source link and a reliability level
 
 Facts checked on **2026-10-20**. Each recipe has a status: **official** (NVIDIA playbook), **vendor** (the tool vendor's own docs), **community-measured** (copied from a source that published a result), or **untested, from &lt;source&gt;** (adapted by us). Blocks that differ from their source are marked *modified from* or *abridged*. See [recipes/README.md](recipes/README.md).
 
@@ -54,7 +54,7 @@ Rules of thumb from these numbers:
 
 - **MoE beats dense.** Decode is limited by memory bandwidth (273 GB/s), and an MoE model only reads its active experts. gpt-oss-120b (5.1B active) runs about 8× faster than Llama 3.3 70B.
 - **One user:** llama.cpp and Ollama start in seconds and are competitive. A well-built vLLM image was faster on 3 of 4 models in a same-harness comparison ([ss121](https://github.com/sergioamsilva/dgx-spark-field-notes)).
-- **Several users, an API, or agents:** use vLLM or SGLang. With the default `OLLAMA_NUM_PARALLEL=1`, Ollama serialises requests: in the same-harness test, 8 parallel requests got the same total throughput as one.
+- **Several users, an API, or agents:** use vLLM or SGLang. With the default `OLLAMA_NUM_PARALLEL=1` ([Ollama FAQ](https://docs.ollama.com/faq)), Ollama serialises requests: in the same-harness test, 8 parallel requests got the same total throughput as one.
 
 ---
 
@@ -74,10 +74,12 @@ A selection from [`benchmarks/benchmarks.csv`](benchmarks/benchmarks.csv). The [
 | Qwen3-Coder-Next | vLLM | INT4 AutoRound | 74.8 (1) · 289.0 (8) | — | 1× | [ss121](https://forums.developer.nvidia.com/t/measured-inference-benchmarks-on-a-single-dgx-spark-same-harness-across-ollama-llama-cpp-and-vllm-notes-data-published/379766) | 2026-08-10 |
 | Qwen3-14B | TensorRT-LLM | NVFP4 | 22.7 (1) | 5,929 | 1× | [NVIDIA](https://developer.nvidia.com/blog/how-nvidia-dgx-sparks-performance-enables-intensive-ai-tasks) | 2025-10-24 |
 | Llama 3.1 70B | Ollama 0.12.6 | Q4_K_M | 4.4 (1) | 1,911 | 1× | [Ollama](https://ollama.com/blog/nvidia-spark-performance) | 2025-10-23 |
-| Nemotron 3 Super 120B-A12B | vLLM nightly + MTP | NVFP4 | 23.45 (1) | — | 1× | [forum](https://forums.developer.nvidia.com/t/nemotron-3-super-120b-a12b-nvfp4-on-single-dgx-spark-23-45-tok-s-spark-arena-com-benhmarks/370070) | 2026-05-13 |
+| Nemotron 3 Super 120B-A12B | vLLM nightly + MTP | NVFP4 | 23.45 (1) | — | 1× | [forum](https://forums.developer.nvidia.com/t/nemotron-3-super-120b-a12b-nvfp4-on-single-dgx-spark-23-45-tok-s-spark-arena-com-benhmarks/370070) | 2026-05-15¹ |
 | gpt-oss-120b | vLLM 0.17.0 + patches, TP=2 | MXFP4 | 81.5 (1) | 6,069 | 2× | [forum](https://forums.developer.nvidia.com/t/vllm-0-17-0-mxfp4-patches-for-dgx-spark-qwen3-5-35b-a3b-70-tok-s-gpt-oss-120b-80-tok-s-tp-2/362824) | 2026-03-11 |
 | Qwen3-235B-A22B | TensorRT-LLM 1.2.0rc5, TP=2 | NVFP4 | 21.65 (1) | — | 2× | [forum](https://forums.developer.nvidia.com/t/question-on-inference-performance-results-of-qwen3-235b-a22b-on-2x-dgx-spark/355053) | 2025-12-19 |
 | Qwen3.5-397B-A17B | vLLM, TP=4 | INT4 AutoRound | ~37 (1) · ~103 (4) | — | 4× | [spark-vllm-docker](https://github.com/eugr/spark-vllm-docker) | 2026-03-12 |
+
+¹ Date of the forum post with the numbers; the Spark Arena submission / thread start is 2026-05-13.
 
 Community leaderboard with a recipe for every result: [Spark Arena](https://spark-arena.com/leaderboard). We have not imported it yet.
 
@@ -104,7 +106,7 @@ GB10 is ARM64. An image without a `linux/arm64` variant will not start. NGC imag
 
 ### 2. Unified memory behaves differently
 
-- CPU and GPU share the same 128 GB. About **117 GB** is usable by vLLM per node ([forum](https://forums.developer.nvidia.com/t/dgx-spark-multi-node-llm-inference-report-for-qwen3-235b-model/355126)); the OS sees ~121 GiB of unified memory ([field-notes](https://github.com/sergioamsilva/dgx-spark-field-notes)). Display memory takes 2 GB by default and can be set to 4 GB in BIOS since July 2026 ([release notes](https://docs.nvidia.com/dgx/dgx-spark/release-notes.html)).
+- CPU and GPU share the same 128 GB. About **117 GB** is usable ([forum](https://forums.developer.nvidia.com/t/dgx-spark-multi-node-llm-inference-report-for-qwen3-235b-model/355126)); the OS sees ~121 GiB of unified memory ([field-notes](https://github.com/sergioamsilva/dgx-spark-field-notes)). Display memory takes 2 GB by default and can be set to 4 GB in BIOS since July 2026 ([release notes](https://docs.nvidia.com/dgx/dgx-spark/release-notes.html)).
 - `nvidia-smi --query-gpu` shows `N/A` for memory fields. That is expected on UMA; use plain `nvidia-smi` ([legacy vLLM playbook](https://github.com/NVIDIA/dgx-spark-playbooks/blob/main/nvidia/vllm/README.md)).
 - The page cache is not handed back to the GPU automatically. If a model will not load although memory looks free, run `sudo sh -c 'sync; echo 3 > /proc/sys/vm/drop_caches'` (many NVIDIA playbooks). In `free`, read the `available` column, not `used`.
 - Keep one large model resident at a time.
@@ -137,7 +139,7 @@ GB10 is ARM64. An image without a `linux/arm64` variant will not start. NGC imag
 - **Empty `content` with `finish_reason: length`:** a thinking model used up `max_tokens` on reasoning. Raise `max_tokens` (NVIDIA playbooks).
 - **`PermissionError` on `~/.cache/huggingface` or a cache you cannot delete:** containers download as root. Use `sudo chown -R "$USER:$USER" ~/.cache/huggingface`.
 - **A Spark shuts down under heavy load:** `sudo nvidia-smi -lgc 200,2150` lowers the GPU clock; it resets on reboot ([spark-vllm-docker](https://github.com/eugr/spark-vllm-docker)).
-- **The first request is slow:** a cold request measured 16 tok/s on a model that settled at ~53 ([field-notes](https://github.com/sergioamsilva/dgx-spark-field-notes/blob/main/docs/vllm-on-spark.md)). Throw away a warm-up request before you measure.
+- **The first request is slow:** in field-notes the first, cold request ran at 16 tok/s, against ~53 tok/s once warm ([troubleshooting](https://github.com/sergioamsilva/dgx-spark-field-notes/blob/main/docs/troubleshooting.md)). Throw away a warm-up request before you measure.
 
 ---
 
